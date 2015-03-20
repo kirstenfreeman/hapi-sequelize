@@ -657,5 +657,34 @@ describe('QueryHandler', function () {
                 });
             });
         });
+
+        it('should use the routes default sort options', function () {
+            server.route({
+                path: '/users',
+                method: 'get',
+                handler: {
+                    'db.query': {
+                        model: 'User',
+                        sort: 'lastName',
+                        options: {
+                            attributes: ['firstName', 'lastName']
+                        }
+                    }
+                }
+            });
+
+            return server.injectThen({
+                method: 'get',
+                url: '/users'
+            }).then(function (res) {
+                res.statusCode.should.equal(200);
+                finder.should.have.been.calledWith({
+                    limit: 30,
+                    offset: 0,
+                    order: ['lastName'],
+                    attributes: ['firstName', 'lastName']
+                });
+            });
+        });
     });
 });
