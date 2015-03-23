@@ -368,7 +368,7 @@ describe('QueryHandler', function () {
                 url: '/users'
             }).then(function (res) {
                 res.statusCode.should.equal(200);
-                finder.should.have.been.calledWith({ limit: 30, offset: 0 }, { subQuery: false });
+                finder.should.have.been.calledWith({ limit: 30, offset: 0 });
             });
         });
 
@@ -395,7 +395,7 @@ describe('QueryHandler', function () {
                     where: { department: 'engineering' },
                     limit: 30,
                     offset: 0
-                }, { subQuery: false });
+                });
             });
         });
 
@@ -481,7 +481,7 @@ describe('QueryHandler', function () {
                 url: '/users?sort=firstName'
             }).then(function (res) {
                 res.statusCode.should.equal(200);
-                finder.should.have.been.calledWith({ offset: 0, limit: 30, order: ['firstName'] });
+                finder.should.have.been.calledWith({ offset: 0, limit: 30, order: [[['firstName', 'ASC']]] });
             });
         });
 
@@ -501,7 +501,7 @@ describe('QueryHandler', function () {
                 url: '/users?sort=-firstName'
             }).then(function (res) {
                 res.statusCode.should.equal(200);
-                finder.should.have.been.calledWith({ offset: 0, limit: 30, order: [['firstName', 'DESC']] });
+                finder.should.have.been.calledWith({ offset: 0, limit: 30, order: [[['firstName', 'DESC']]] });
             });
         });
 
@@ -524,7 +524,7 @@ describe('QueryHandler', function () {
                 finder.should.have.been.calledWith({
                     offset: 0,
                     limit: 30,
-                    order: [['lastName', 'DESC'], 'firstName']
+                    order: [[['lastName', 'DESC']], [['firstName', 'ASC']]]
                 });
             });
         });
@@ -681,7 +681,7 @@ describe('QueryHandler', function () {
                 finder.should.have.been.calledWith({
                     limit: 30,
                     offset: 0,
-                    order: ['lastName'],
+                    order: [[['lastName', 'ASC']]],
                     attributes: ['firstName', 'lastName']
                 });
             });
