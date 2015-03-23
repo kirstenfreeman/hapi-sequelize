@@ -163,6 +163,19 @@ describe('QueryHandler', function () {
             }).should.throw('where must be a Function');
         });
 
+        it('should support query options', function () {
+            addRoute.bind(null, {
+                handler: {
+                    'db.query': {
+                        model: 'User',
+                        queryOptions: {
+                            subQuery: false
+                        }
+                    }
+                }
+            }).should.not.throw();
+        });
+
         describe('expand', function () {
             it('should support an expand descriptor', function () {
                 addRoute.bind(null, {
@@ -631,7 +644,7 @@ describe('QueryHandler', function () {
             });
         });
 
-        it('should pass through sequelie options', function () {
+        it('should pass through sequelize options', function () {
             server.route({
                 path: '/users',
                 method: 'get',
@@ -655,6 +668,32 @@ describe('QueryHandler', function () {
                     offset: 0,
                     attributes: ['firstName', 'lastName']
                 });
+            });
+        });
+
+        it('should pass through sequelize query options', function () {
+            server.route({
+                path: '/users',
+                method: 'get',
+                handler: {
+                    'db.query': {
+                        model: 'User',
+                        queryOptions: {
+                            subQuery: false
+                        }
+                    }
+                }
+            });
+
+            return server.injectThen({
+                method: 'get',
+                url: '/users'
+            }).then(function (res) {
+                res.statusCode.should.equal(200);
+                finder.should.have.been.calledWith({
+                    limit: 30,
+                    offset: 0,
+                }, { subQuery: false });
             });
         });
 
