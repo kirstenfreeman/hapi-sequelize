@@ -2,7 +2,7 @@
 
 var chai = require('chai');
 var should = chai.should();
-var queryHandlerFactory = require('../lib/query-handler');
+var queryHandlerFactory = require('../../lib/query-handler');
 var Sequelize = require('sequelize');
 var hapi = require('hapi');
 var joi = require('joi');
