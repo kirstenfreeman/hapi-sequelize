@@ -5,7 +5,7 @@ var should = chai.should();
 var sinon = require('sinon');
 chai.use(require('sinon-chai'));
 var _ = require('lodash');
-var factory = require('../lib/update-handler');
+var factory = require('../../lib/update-handler');
 var joi = require('joi');
 var Sequelize = require('sequelize');
 var hapi = require('hapi');
