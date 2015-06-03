@@ -41,6 +41,7 @@
     "glib": "0.0.3",
     "joi": "^5.1.0",
     "lodash": "^3.5.0",
+    "pg-large-object": "0.0.1",
     "sequelize": "^2.0.4"
   }
 }
