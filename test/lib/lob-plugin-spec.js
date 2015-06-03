@@ -7,9 +7,7 @@ var stream = require('stream');
 var $ = require('./common');
 var P = $.sequelize.Promise;
 
-lobPlugin($.sequelize);
-
-describe.only('LobPlugin', function () {
+describe('LobPlugin', function () {
     it('should create a lob', function () {
         return $.sequelize.createLob()
             .then(function (lob) {

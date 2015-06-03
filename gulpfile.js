@@ -16,7 +16,7 @@ gulp.task('test', function (done) {
         .pipe(istanbul())
         .pipe(istanbul.hookRequire())
         .on('finish', function () {
-            gulp.src(['test/*.js'])
+            gulp.src(['test/**/*.js'])
                 .pipe(mocha())
                 .pipe(istanbul.writeReports())
                 .on('end', done)

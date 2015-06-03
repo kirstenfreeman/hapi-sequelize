@@ -34,7 +34,7 @@ var config = {
 
 var sequelize = new Sequelize(config.database, config.user, config.password, {
     host: config.host,
-    //logging: false,
+    logging: false,
     dialect: 'postgres'
 });
 
