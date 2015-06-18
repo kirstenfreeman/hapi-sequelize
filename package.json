@@ -40,7 +40,7 @@
     "ent-utils": "^1.0.1",
     "glib": "0.0.3",
     "joi": "^5.1.0",
-    "lodash": "^3.5.0",
+    "lodash": "^3.9.3",
     "moniker": "^0.1.2",
     "pg-large-object": "0.0.1",
     "sequelize": "2.1.0",
