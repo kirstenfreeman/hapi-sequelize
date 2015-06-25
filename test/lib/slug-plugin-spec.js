@@ -7,7 +7,7 @@ var db = require('../db');
 var sequelize = db.sequelize;
 var DataTypes = sequelize.Sequelize;
 
-describe.only('slug-plugin', function () {
+describe('slug-plugin', function () {
     it('should exist', function () {
         should.exist(slugs);
     });
@@ -89,7 +89,7 @@ describe.only('slug-plugin', function () {
             return sequelize.sync({ force: true });
         });
 
-        it.only('should add a slug field', function () {
+        it('should add a slug field', function () {
             return Datasource.create({ name: 'World Demo' })
                 .then(function (datasource) {
                     datasource.should.have.property('slug', 'world-demo');
