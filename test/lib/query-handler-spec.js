@@ -34,9 +34,6 @@ describe('QueryHandler', function () {
                     findAndCountAll: finder,
                     associations: {
                         department: 'department'
-                    },
-                    getAssociationByAlias: function (alias) {
-                        return alias;
                     }
                 },
                 Set: {
@@ -44,9 +41,7 @@ describe('QueryHandler', function () {
                         name: {}
                     },
                     findAndCountAll: finder,
-                    getAssociationByAlias: function (alias) {
-                        return alias;
-                    }
+                    associations: {}
                 }
             }
         };

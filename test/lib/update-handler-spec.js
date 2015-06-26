@@ -62,9 +62,6 @@ describe('Generic Update Handler', function () {
                         settings: {}
                     },
                     findOne: finder,
-                    getAssociationByAlias: function (alias) {
-                        return alias;
-                    },
                     build: builder
                 },
                 Bar: {
@@ -73,9 +70,7 @@ describe('Generic Update Handler', function () {
                     },
                     findOne: thrower,
                     build: builder,
-                    getAssociationByAlias: function (alias) {
-                        return alias;
-                    }
+                    associations: {}
                 }
             },
             model: function (model) {

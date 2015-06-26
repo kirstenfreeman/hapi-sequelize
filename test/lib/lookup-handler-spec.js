@@ -36,19 +36,14 @@ describe('Generic Lookup Handler', function () {
                     associations: {
                         settings: {}
                     },
-                    find: finder,
-                    getAssociationByAlias: function(alias) {
-                        return alias;
-                    }
+                    find: finder
                 },
                 Bar: {
                     attributes: {
                         name: {}
                     },
                     find: thrower,
-                    getAssociationByAlias: function(alias) {
-                        return alias;
-                    }
+                    associations: {}
                 }
             }
         };
@@ -260,7 +255,7 @@ describe('Generic Lookup Handler', function () {
                 }).then(function (res) {
                     res.statusCode.should.equal(200);
                     finder.should.have.been.calledWith({
-                        include: [ 'settings' ],
+                        include: [ sequelize.models.User.associations.settings ],
                         where: { username: 'hank' }
                     });
                 });
@@ -364,7 +359,7 @@ describe('Generic Lookup Handler', function () {
                 return server.injectThen('/users/hank')
                     .then(function (res) {
                         res.should.have.property('statusCode', 200);
-                        finder.should.have.been.calledWith({ where: { username: 'hank' }, include: ['settings'] });
+                        finder.should.have.been.calledWith({ where: { username: 'hank' }, include: [sequelize.models.User.associations.settings] });
                     });
             });
 
@@ -385,7 +380,7 @@ describe('Generic Lookup Handler', function () {
                 return server.injectThen('/users/hank')
                     .then(function (res) {
                         res.should.have.property('statusCode', 200);
-                        finder.should.have.been.calledWith({ where: { username: 'hank' }, include: ['settings'] });
+                        finder.should.have.been.calledWith({ where: { username: 'hank' }, include: [sequelize.models.User.associations.settings] });
                     });
             });
 
