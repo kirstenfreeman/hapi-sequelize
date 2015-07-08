@@ -11,7 +11,7 @@ var Sequelize = require('sequelize');
 var hapi = require('hapi');
 
 describe('Generic Update Handler', function () {
-    var server, finder, thrower, sequelize, builder, saver;
+    var server, finder, thrower, sequelize, builder, saver, scope;
 
     beforeEach(function () {
         //setup mocks
@@ -51,6 +51,10 @@ describe('Generic Update Handler', function () {
             return Sequelize.Promise.resolve(instance);
         });
 
+        scope = sinon.spy(function () {
+            return sequelize.models.User;
+        });
+
         sequelize = {
             models: {
                 User: {
@@ -62,7 +66,8 @@ describe('Generic Update Handler', function () {
                         settings: {}
                     },
                     findOne: finder,
-                    build: builder
+                    build: builder,
+                    scope: scope
                 },
                 Bar: {
                     attributes: {
@@ -228,6 +233,43 @@ describe('Generic Update Handler', function () {
             factory(sequelize, {model: 'User'}).should.be.a('function');
         });
 
+        it('should support a scope option', function () {
+            addRoute.bind(null, {
+                handler: {
+                    'db.update': {
+                        model: 'User',
+                        scope: 'customScope'
+                    }
+                }
+            }).should.not.throw();
+
+            scope.should.have.been.calledWith('customScope');
+        });
+
+        it('should support a null scope to unset the default scope', function () {
+            addRoute.bind(null, {
+                handler: {
+                    'db.update': {
+                        model: 'User',
+                        scope: null
+                    }
+                }
+            }).should.not.throw();
+
+            scope.should.have.been.calledWith(null);
+        });
+
+        it('should not invoke Model.scope() if no scope is supplied', function () {
+            addRoute.bind(null, {
+                handler: {
+                    'db.update': {
+                        model: 'User'
+                    }
+                }
+            }).should.not.throw();
+
+            scope.should.not.have.been.called;
+        });
     });
 
     describe('handler', function () {

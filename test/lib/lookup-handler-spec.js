@@ -14,7 +14,7 @@ var hapi = require('hapi');
 var $;
 
 describe('Generic Lookup Handler', function () {
-    var server, finder, thrower, sequelize;
+    var server, finder, thrower, sequelize, scope;
 
     beforeEach(function () {
         //setup mocks
@@ -24,6 +24,10 @@ describe('Generic Lookup Handler', function () {
 
         thrower = sinon.spy(function () {
             return Sequelize.Promise.resolve(null);
+        });
+
+        scope = sinon.spy(function () {
+            return sequelize.models.User;
         });
 
         sequelize = {
@@ -36,7 +40,8 @@ describe('Generic Lookup Handler', function () {
                     associations: {
                         settings: {}
                     },
-                    find: finder
+                    find: finder,
+                    scope: scope
                 },
                 Bar: {
                     attributes: {
@@ -186,6 +191,43 @@ describe('Generic Lookup Handler', function () {
             route.settings.validate.query.describe().children.should.have.property('expand');
         });
 
+        it('should support a scope option', function () {
+            addRoute.bind(null, {
+                handler: {
+                    'db.lookup': {
+                        model: 'User',
+                        scope: 'customScope'
+                    }
+                }
+            }).should.not.throw();
+
+            scope.should.have.been.calledWith('customScope');
+        });
+
+        it('should support a null scope to unset the default scope', function () {
+            addRoute.bind(null, {
+                handler: {
+                    'db.lookup': {
+                        model: 'User',
+                        scope: null
+                    }
+                }
+            }).should.not.throw();
+
+            scope.should.have.been.calledWith(null);
+        });
+
+        it('should not invoke Model.scope() if no scope is supplied', function () {
+            addRoute.bind(null, {
+                handler: {
+                    'db.lookup': {
+                        model: 'User'
+                    }
+                }
+            }).should.not.throw();
+
+            scope.should.not.have.been.called;
+        });
 
         describe('handler', function () {
             it('should look up the model using path params as a natural id', function () {
