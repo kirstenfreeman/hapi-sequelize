@@ -12,7 +12,7 @@ var _ = require('lodash');
 chai.use(require('sinon-chai'));
 
 describe('QueryHandler', function () {
-    var server, finder, sequelize;
+    var server, finder, sequelize, scope;
 
     beforeEach(function () {
         finder = sinon.spy(function (opts, queryOpts) {
@@ -22,6 +22,10 @@ describe('QueryHandler', function () {
             ];
 
             return Sequelize.Promise.resolve({ rows: rows, count: 2 });
+        });
+
+        scope = sinon.spy(function () {
+            return sequelize.models.User;
         });
 
         sequelize = {
@@ -34,7 +38,8 @@ describe('QueryHandler', function () {
                     findAndCountAll: finder,
                     associations: {
                         department: 'department'
-                    }
+                    },
+                    scope: scope
                 },
                 Set: {
                     attributes: {
@@ -360,6 +365,44 @@ describe('QueryHandler', function () {
 
             var route = server.lookup('user.search');
             route.settings.validate.query.describe().children.should.have.property('foo');
+        });
+
+        it('should support a scope option', function () {
+            addRoute.bind(null, {
+                handler: {
+                    'db.query': {
+                        model: 'User',
+                        scope: 'customScope'
+                    }
+                }
+            }).should.not.throw();
+
+            scope.should.have.been.calledWith('customScope');
+        });
+
+        it('should support a null scope to unset the default scope', function () {
+            addRoute.bind(null, {
+                handler: {
+                    'db.query': {
+                        model: 'User',
+                        scope: null
+                    }
+                }
+            }).should.not.throw();
+
+            scope.should.have.been.calledWith(null);
+        });
+
+        it('should not invoke Model.scope() if no scope is supplied', function () {
+            addRoute.bind(null, {
+                handler: {
+                    'db.query': {
+                        model: 'User'
+                    }
+                }
+            }).should.not.throw();
+
+            scope.should.not.have.been.called;
         });
     });
 
