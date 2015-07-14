@@ -63,6 +63,10 @@ describe.only('history-plugin', function () {
         OrderHistory.attributes.should.have.property('_changes');
     });
 
+    it('should have a revision attribute', function () {
+        OrderHistory.attributes.should.have.property('_revision');
+    });
+
     it('should ignore untracked fields', function () {
         OrderHistory.attributes.should.not.have.property('untracked');
     });
@@ -102,6 +106,7 @@ describe.only('history-plugin', function () {
                         history[0].should.have.property('_id', order.id);
                         history[0].should.have.property('_user', 'Hank');
                         history[0].should.have.property('_date');
+                        history[0].should.have.property('_revision', 1);
                         history[0].should.have.property('product', order.product);
                         history[0].should.have.property('customer', order.customer);
                         history[0].should.have.property('amount', 200);
