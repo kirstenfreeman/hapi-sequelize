@@ -55,10 +55,6 @@ describe.only('history-plugin', function () {
         OrderHistory.attributes.should.have.property('_user');
     });
 
-    it('should have an _op attribute', function () {
-        OrderHistory.attributes.should.have.property('_op');
-    });
-
     it('should have a _date attribute', function () {
         OrderHistory.attributes.should.have.property('_date');
     });
@@ -71,9 +67,9 @@ describe.only('history-plugin', function () {
         OrderHistory.attributes.should.not.have.property('untracked');
     });
 
-    it('should index the _id property', function () {
+    it('should index the _sourceId property', function () {
         OrderHistory.options.indexes.should.have.length(1);
-        OrderHistory.options.indexes[0].should.have.property('fields').that.has.members(['_id']);
+        OrderHistory.options.indexes[0].should.have.property('fields').that.has.members(['_sourceId']);
     });
 
     it('should include an association to the tracked model', function () {
@@ -90,26 +86,8 @@ describe.only('history-plugin', function () {
                 });
         });
 
-        it('should add a single history record', function () {
-            return OrderHistory.findAll()
-                .then(function(history) {
-                    history.should.have.length(1);
-                    history[0].should.have.property('_id', order.id);
-                    history[0].should.have.property('_user', 'Hank');
-                    history[0].should.have.property('_date');
-                    history[0].should.have.property('_op', 'insert');
-                    history[0].should.have.property('product', order.product);
-                    history[0].should.have.property('customer', order.customer);
-                    history[0].should.have.property('amount', order.amount);
-                })
-        });
-
-        it('should save a reference to the tracked items id', function () {
-            return OrderHistory.findAll({ where: { _id: order.id } }).should.eventually.have.length(1);
-        });
-
-        it('should save a reference to the user who made the change', function () {
-            return OrderHistory.findAll({ where: { _user: 'Hank' } }).should.eventually.have.length(1);
+        it('should not update the history', function () {
+            return OrderHistory.count().should.eventually.equal(0);
         });
 
         describe('when a tracked item has been updated', function () {
@@ -117,11 +95,32 @@ describe.only('history-plugin', function () {
                 return order.update({ amount: 300.00 });
             });
 
-            it('should update the history', function () {
-                return OrderHistory.findAll({ order: [['_date', 'DESC']] })
+            it('should update the history with the previous values', function () {
+                return OrderHistory.findAll()
                     .then(function (history) {
-                        history.should.have.length(2);
+                        history.should.have.length(1);
+                        history[0].should.have.property('_id', order.id);
+                        history[0].should.have.property('_user', 'Hank');
+                        history[0].should.have.property('_date');
+                        history[0].should.have.property('product', order.product);
+                        history[0].should.have.property('customer', order.customer);
+                        history[0].should.have.property('amount', 200);
                     });
+            });
+
+            it('should support reverting the target model to a specific history instance', function () {
+                return OrderHistory.find()
+                    .then(function (history) {
+                        history.should.respondTo('revert');
+                        return history.revert();
+                    })
+                    .then(function(order) {
+                        order.amount.should.equal(200);
+                        return OrderHistory.count();
+                    })
+                    .then(function(count) {
+                        count.should.equal(2);
+                    })
             });
         });
 
