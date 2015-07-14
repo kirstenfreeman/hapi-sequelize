@@ -13,7 +13,7 @@ describe('slug-plugin', function () {
     });
 
     it('should be a function', function () {
-        slugs.should.be.a.function;
+        slugs.should.be.a('function');
     });
 
     describe('when an entity has basic slug support', function () {
