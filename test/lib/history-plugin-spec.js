@@ -112,8 +112,8 @@ describe.only('history-plugin', function () {
             it('should support reverting the target model to a specific history instance', function () {
                 return OrderHistory.find()
                     .then(function (history) {
-                        history.should.respondTo('revert');
-                        return history.revert();
+                        history.should.respondTo('restore');
+                        return history.restore();
                     })
                     .then(function(order) {
                         order.amount.should.equal(200);
