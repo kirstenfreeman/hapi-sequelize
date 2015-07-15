@@ -123,6 +123,23 @@ describe.only('history-plugin', function () {
                         count.should.equal(2);
                     })
             });
+
+            describe('and the history table has been partially cleared', function () {
+                beforeEach(function () {
+                    return order.update({ amount: 400.00 });
+                });
+
+                beforeEach(function () {
+                    return OrderHistory.destroy({ where: { _revision: 1 } });
+                });
+
+                it('should pick the next revision number', function () {
+                    return order.update({ amount: 500.00 })
+                        .then(function () {
+                            return OrderHistory.max('_revision').should.eventually.equal(3);
+                        });
+                });
+            });
         });
 
         describe('when an untracked field is updated', function () {
