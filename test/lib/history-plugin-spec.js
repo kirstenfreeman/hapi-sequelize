@@ -21,10 +21,7 @@ describe.only('history-plugin', function () {
                 customer: DataTypes.STRING,
                 untracked: DataTypes.STRING
             }, { tableName: 'order' })
-            .plugin(history({
-                track: ['product', 'amount', 'customer'],
-                user: _.constant('Hank')
-            }));
+            .plugin(history('product', 'amount', 'customer'));
 
         OrderHistory = sequelize.models.OrderHistory;
 
@@ -94,7 +91,7 @@ describe.only('history-plugin', function () {
             return OrderHistory.count().should.eventually.equal(0);
         });
 
-        describe('when a tracked item has been updated', function () {
+        describe.only('when a tracked field is updated', function () {
             beforeEach(function () {
                 return order.update({ amount: 300.00 });
             });
@@ -104,7 +101,6 @@ describe.only('history-plugin', function () {
                     .then(function (history) {
                         history.should.have.length(1);
                         history[0].should.have.property('_id', order.id);
-                        history[0].should.have.property('_user', 'Hank');
                         history[0].should.have.property('_date');
                         history[0].should.have.property('_revision', 1);
                         history[0].should.have.property('product', order.product);
@@ -126,6 +122,26 @@ describe.only('history-plugin', function () {
                     .then(function(count) {
                         count.should.equal(2);
                     })
+            });
+        });
+
+        describe('when an untracked field is updated', function () {
+            beforeEach(function () {
+                return order.update({ untracked: 'foo' });
+            });
+
+            it('should not update the history table', function () {
+                return OrderHistory.count().should.eventually.equal(0);
+            });
+        });
+
+        describe('when no fields are changed but the entity is saved', function () {
+            beforeEach(function () {
+                return order.save();
+            });
+
+            it('should not update the history table', function () {
+                return OrderHistory.count().should.eventually.equal(0);
             });
         });
 
