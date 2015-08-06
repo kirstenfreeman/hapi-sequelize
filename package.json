@@ -43,7 +43,7 @@
     "lodash": "^3.9.3",
     "moniker": "^0.1.2",
     "pg-large-object": "0.0.1",
-    "sequelize": "^3.3.0",
+    "sequelize": "3.3.x",
     "slug": "^0.9.1"
   }
 }
