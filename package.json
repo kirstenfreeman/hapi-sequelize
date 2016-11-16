@@ -37,7 +37,7 @@
     "sinon-chai": "^2.8.0"
   },
   "dependencies": {
-    "boom": "^2.6.1",
+    "boom": "^4.2.0",
     "ent-utils": "^1.0.1",
     "glib": "0.0.3",
     "joi": "^9.2.0",
