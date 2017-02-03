@@ -1,6 +1,6 @@
 {
   "name": "ent-hapi-sequelize",
-  "version": "6.1.2",
+  "version": "6.1.3",
   "description": "Sequelize utilities for hapi",
   "main": "lib/index.js",
   "directories": {
