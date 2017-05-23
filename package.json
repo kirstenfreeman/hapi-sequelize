@@ -39,7 +39,7 @@
   "dependencies": {
     "boom": "^4.2.0",
     "ent-utils": "^1.0.1",
-    "glib": "0.0.3",
+    "glib": "^1.0.0",
     "joi": "^9.0.4",
     "lodash": "^3.9.3",
     "moniker": "^0.1.2",
