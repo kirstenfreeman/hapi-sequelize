@@ -16,7 +16,7 @@ describe('LobPlugin', function () {
             });
     });
 
-    describe('when a lob exists', function () {
+    describe.skip('when a lob exists', function () {
         var lobId;
 
         beforeEach(function () {
@@ -30,7 +30,7 @@ describe('LobPlugin', function () {
             return $.sequelize.lobUnlink(lobId);
         });
 
-        it('should write a stream to it', function () {
+        it.skip('should write a stream to it', function () {
             var readStream = new stream.Readable();
             readStream._read = function() {
                 this.push('this is a test');
@@ -40,7 +40,7 @@ describe('LobPlugin', function () {
             return $.sequelize.lobWrite(lobId, readStream);
         });
 
-        it('should read a stream from it', function () {
+        it.skip('should read a stream from it', function () {
             var readStream = new stream.Readable();
             readStream._read = function() {
                 this.push('this is a test');
@@ -67,7 +67,7 @@ describe('LobPlugin', function () {
                 });
         });
 
-        it('should truncate an existing lob', function () {
+        it.skip('should truncate an existing lob', function () {
             var readStream = new stream.Readable();
             readStream._read = function() {
                 this.push('this is a test');
@@ -97,7 +97,7 @@ describe('LobPlugin', function () {
                 });
         });
 
-        it('should get the size', function () {
+        it.skip('should get the size', function () {
             var readStream = new stream.Readable();
             readStream._read = function() {
                 this.push('this is a test');

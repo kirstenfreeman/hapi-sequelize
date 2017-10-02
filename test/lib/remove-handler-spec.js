@@ -68,7 +68,7 @@ describe('Generic Remove Handler', function () {
                 handler: {
                     'db.remove': {}
                 }
-            }).should.throw('Error in route /my/route: model is required');
+            }).should.throw('Error in route /my/route: child "model" fails because ["model" is required]');
 
             addRoute.bind(null, {
                 handler: {
@@ -86,7 +86,7 @@ describe('Generic Remove Handler', function () {
                         model: 'Bar'
                     }
                 }
-            }).should.throw('model must be one of Foo');
+            }).should.throw('Error in route /my/route: child "model" fails because ["model" must be one of [Foo]]');
         });
 
         it('should support a where function', function () {
@@ -110,15 +110,15 @@ describe('Generic Remove Handler', function () {
                         where: { foo: 'bar' }
                     }
                 }
-            }).should.throw('where must be a Function');
+            }).should.throw('Error in route /my/route: child "where" fails because ["where" must be a Function]');
         });
 
-        it('should support a preDelete extension point that is a function', function () {
+        it('should support a preRemove extension point that is a function', function () {
             addRoute.bind(null, {
                 handler: {
                     'db.remove': {
                         model: 'Foo',
-                        preDelete: function () {
+                        preRemove: function () {
                         }
                     }
                 }
@@ -133,7 +133,7 @@ describe('Generic Remove Handler', function () {
                         preRemove: 'bar'
                     }
                 }
-            }).should.throw('preRemove must be a Function');
+            }).should.throw('Error in route /my/route: child "preRemove" fails because ["preRemove" must be a Function]');
         });
 
         it('should support a postRemove extension point that is a function', function () {
@@ -156,7 +156,7 @@ describe('Generic Remove Handler', function () {
                         postRemove: 'bar'
                     }
                 }
-            }).should.throw('postRemove must be a Function');
+            }).should.throw('Error in route /my/route: child "postRemove" fails because ["postRemove" must be a Function]');
         });
 
         it('should return a handler function when invoked', function () {

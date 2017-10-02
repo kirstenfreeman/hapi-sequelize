@@ -116,7 +116,7 @@ describe('Generic Update Handler', function () {
                 handler: {
                     'db.update': {}
                 }
-            }).should.throw('Error in route /users/{username}: model is required');
+            }).should.throw('Error in route /users/{username}: child "model" fails because ["model" is required]');
 
             addRoute.bind(null, {
                 handler: {
@@ -134,7 +134,7 @@ describe('Generic Update Handler', function () {
                         model: 'Account'
                     }
                 }
-            }).should.throw('model must be one of User');
+            }).should.throw('Error in route /users/{username}: child "model" fails because ["model" must be one of [User, Bar]]');
         });
 
         it('should support a where function', function () {
@@ -158,7 +158,7 @@ describe('Generic Update Handler', function () {
                         where: {foo: 'bar'}
                     }
                 }
-            }).should.throw('where must be a Function');
+            }).should.throw('Error in route /users/{username}: child "where" fails because ["where" must be a Function]');
         });
 
         it('should support a preLookup extension point that is a function', function () {
@@ -181,7 +181,7 @@ describe('Generic Update Handler', function () {
                         preUpdate: 'bar'
                     }
                 }
-            }).should.throw('preUpdate must be a Function');
+            }).should.throw('Error in route /users/{username}: child "preUpdate" fails because ["preUpdate" must be a Function]');
         });
 
         it('should support a postLookup extension point that is a function', function () {
@@ -215,7 +215,7 @@ describe('Generic Update Handler', function () {
                         postUpdate: 'bar'
                     }
                 }
-            }).should.throw('postUpdate must be a Function');
+            }).should.throw('Error in route /users/{username}: child "postUpdate" fails because ["postUpdate" must be a Function]');
         });
 
         it('should support a create flag', function () {
@@ -242,8 +242,6 @@ describe('Generic Update Handler', function () {
                     }
                 }
             }).should.not.throw();
-
-            scope.should.have.been.calledWith('customScope');
         });
 
         it('should support a null scope to unset the default scope', function () {
@@ -255,20 +253,17 @@ describe('Generic Update Handler', function () {
                     }
                 }
             }).should.not.throw();
-
-            scope.should.have.been.calledWith(null);
         });
 
-        it('should not invoke Model.scope() if no scope is supplied', function () {
+        it('should support a scope option that is a function', function () {
             addRoute.bind(null, {
                 handler: {
                     'db.update': {
-                        model: 'User'
+                        model: 'User',
+                        scope: _.noop
                     }
                 }
             }).should.not.throw();
-
-            scope.should.not.have.been.called;
         });
     });
 
@@ -491,6 +486,95 @@ describe('Generic Update Handler', function () {
                     silent: true
                 });
             });
+        });
+
+        it('should use a configured scope by name', function () {
+            server.route({
+                method: 'put',
+                path: '/users/{userId}',
+                handler: {
+                    'db.update': {
+                        model: 'User',
+                        scope: 'customScope'
+                    }
+                }
+            });
+
+            return server.injectThen({
+                method: 'put',
+                url: '/users/me'
+            })
+                .then(res => {
+                    res.statusCode.should.equal(200);
+                    scope.should.have.been.calledWith('customScope');
+                });
+        });
+
+        it('should use a configured null scope to unset the default scope', function () {
+            server.route({
+                method: 'put',
+                path: '/users/{userId}',
+                handler: {
+                    'db.update': {
+                        model: 'User',
+                        scope: null
+                    }
+                }
+            });
+
+            return server.injectThen({
+                method: 'put',
+                url: '/users/me'
+            })
+                .then(res => {
+                    res.statusCode.should.equal(200);
+                    scope.should.have.been.calledWith(null);
+                });
+        });
+
+        it('should use a configured scope function', function () {
+            const handlerScopeSpy = sinon.spy();
+            server.route({
+                method: 'put',
+                path: '/users/{userId}',
+                handler: {
+                    'db.update': {
+                        model: 'User',
+                        scope: handlerScopeSpy
+                    }
+                }
+            });
+
+            return server.injectThen({
+                method: 'put',
+                url: '/users/me'
+            })
+                .then(res => {
+                    res.statusCode.should.equal(200);
+                    handlerScopeSpy.should.have.been.calledOnce;
+                    handlerScopeSpy.firstCall.args.should.have.length(1);
+                });
+        });
+
+        it('should not invoke Model.scope() if no scope is supplied in the route definition', function () {
+            server.route({
+                method: 'put',
+                path: '/users/{userId}',
+                handler: {
+                    'db.update': {
+                        model: 'User'
+                    }
+                }
+            });
+
+            return server.injectThen({
+                method: 'put',
+                url: '/users/me'
+            })
+                .then(res => {
+                    res.statusCode.should.equal(200);
+                    scope.should.not.have.been.called;
+                });
         });
     });
 

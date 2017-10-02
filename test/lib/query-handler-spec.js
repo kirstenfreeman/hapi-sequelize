@@ -1,22 +1,22 @@
 'use strict';
 
-var chai = require('chai');
-var should = chai.should();
-var queryHandlerFactory = require('../../lib/query-handler');
-var Sequelize = require('sequelize');
-var hapi = require('hapi');
-var joi = require('joi');
-var sinon = require('sinon');
-var _ = require('lodash');
+const chai = require('chai');
+const should = chai.should();
+const queryHandlerFactory = require('../../lib/query-handler');
+const Sequelize = require('sequelize');
+const hapi = require('hapi');
+const joi = require('joi');
+const sinon = require('sinon');
+const _ = require('lodash');
 
 chai.use(require('sinon-chai'));
 
 describe('QueryHandler', function () {
-    var server, finder, sequelize, scope;
+    let server, finder, sequelize, scope;
 
     beforeEach(function () {
         finder = sinon.spy(function (opts, queryOpts) {
-            var rows = [
+            const rows = [
                 { firstName: 'Brad', lastName: 'Leupen' },
                 { firstName: 'Hank', lastName: 'Leupen' }
             ];
@@ -59,7 +59,7 @@ describe('QueryHandler', function () {
         server.register(require('inject-then'), done);
     });
 
-    var addRoute = function (config) {
+    const addRoute = function (config) {
         server.route({ path: '/users', method: 'get', config: _.assign(config, { id: 'user.search' }) });
     };
 
@@ -78,7 +78,7 @@ describe('QueryHandler', function () {
         });
 
         it('should require a model', function () {
-            addRoute.bind(null, { handler: { 'db.query': {} } }).should.throw('model is required');
+            addRoute.bind(null, { handler: { 'db.query': {} } }).should.throw('Error in route /users: child "model" fails because ["model" is required]');
             addRoute.bind(null, {
                 handler: {
                     'db.query': {
@@ -95,7 +95,7 @@ describe('QueryHandler', function () {
                         model: 'Datasource'
                     }
                 }
-            }).should.throw('model must be one of User');
+            }).should.throw('Error in route /users: child "model" fails because ["model" must be one of [User, Set]]');
         });
 
         it('should support a default sort array', function () {
@@ -160,7 +160,7 @@ describe('QueryHandler', function () {
                         where: 'name'
                     }
                 }
-            }).should.throw('where must be a Function');
+            }).should.throw('Error in route /users: child "where" fails because ["where" must be a Function]');
         });
 
         it('should support query options', function () {
@@ -263,7 +263,7 @@ describe('QueryHandler', function () {
                         postQuery: 'doo'
                     }
                 }
-            }).should.throw('postQuery must be a Function');
+            }).should.throw('Error in route /users: child "postQuery" fails because ["postQuery" must be a Function]');
 
             addRoute.bind(null, {
                 handler: {
@@ -284,7 +284,7 @@ describe('QueryHandler', function () {
                         preQuery: 'doo'
                     }
                 }
-            }).should.throw('preQuery must be a Function');
+            }).should.throw('Error in route /users: child "preQuery" fails because ["preQuery" must be a Function]');
 
             addRoute.bind(null, {
                 handler: {
@@ -305,7 +305,7 @@ describe('QueryHandler', function () {
                         limit: 'ten'
                     }
                 }
-            }).should.throw('limit must be a number');
+            }).should.throw('Error in route /users: child "limit" fails because ["limit" must be a number]');
 
             addRoute.bind(null, {
                 handler: {
@@ -344,7 +344,7 @@ describe('QueryHandler', function () {
                 }
             });
 
-            var route = server.lookup('user.search');
+            const route = server.lookup('user.search');
             should.exist(route.settings.validate.query);
         });
 
@@ -363,7 +363,7 @@ describe('QueryHandler', function () {
                 }
             });
 
-            var route = server.lookup('user.search');
+            const route = server.lookup('user.search');
             route.settings.validate.query.describe().children.should.have.property('foo');
         });
 
@@ -376,8 +376,6 @@ describe('QueryHandler', function () {
                     }
                 }
             }).should.not.throw();
-
-            scope.should.have.been.calledWith('customScope');
         });
 
         it('should support a null scope to unset the default scope', function () {
@@ -389,20 +387,17 @@ describe('QueryHandler', function () {
                     }
                 }
             }).should.not.throw();
-
-            scope.should.have.been.calledWith(null);
         });
 
-        it('should not invoke Model.scope() if no scope is supplied', function () {
+        it('should support a scope option that is a function', function () {
             addRoute.bind(null, {
                 handler: {
                     'db.query': {
-                        model: 'User'
+                        model: 'User',
+                        scope: _.noop
                     }
                 }
             }).should.not.throw();
-
-            scope.should.not.have.been.called;
         });
     });
 
@@ -467,7 +462,7 @@ describe('QueryHandler', function () {
                 url: '/users?q=smith'
             }).then(function (res) {
                 res.statusCode.should.equal(200);
-                finder.args[0][0].where.args[0].should.deep.equal({ username: { ilike: '%smith%' } });
+                _.first(finder.firstCall.args).where.should.deep.equal({ $or: [{ username: { ilike: 'smith%' } }] });
             });
         });
 
@@ -491,8 +486,14 @@ describe('QueryHandler', function () {
                 url: '/users?q=smith'
             }).then(function (res) {
                 res.statusCode.should.equal(200);
-                finder.args[0][0].where.args[0].should.deep.equal({ department: 'engineering' });
-                finder.args[0][0].where.args[1].args[0].should.deep.equal({ username: { ilike: '%smith%' } });
+                const where = _.first(finder.firstCall.args).where;
+                _.keys(where).should.have.length(1);
+                where.should.have.property('$and');
+                where.$and.should.have.length(2);
+                where.$and[0].should.deep.equal({ department: 'engineering' });
+                where.$and[1].should.have.property('$or');
+                where.$and[1].$or.should.have.length(1);
+                _.first(where.$and[1].$or).should.deep.equal({ username: { ilike: 'smith%' } });
             });
         });
 
@@ -762,6 +763,95 @@ describe('QueryHandler', function () {
                     attributes: ['firstName', 'lastName']
                 });
             });
+        });
+
+        it('should use a configured scope by name', function () {
+            server.route({
+                method: 'get',
+                path: '/users',
+                handler: {
+                    'db.query': {
+                        model: 'User',
+                        scope: 'customScope'
+                    }
+                }
+            });
+
+            return server.injectThen({
+                method: 'GET',
+                url: '/users'
+            })
+                .then(res => {
+                    res.statusCode.should.equal(200);
+                    scope.should.have.been.calledWith('customScope');
+                });
+        });
+
+        it('should use a configured null scope to unset the default scope', function () {
+            server.route({
+                method: 'GET',
+                path: '/users',
+                handler: {
+                    'db.query': {
+                        model: 'User',
+                        scope: null
+                    }
+                }
+            });
+
+            return server.injectThen({
+                method: 'GET',
+                url: '/users'
+            })
+                .then(res => {
+                    res.statusCode.should.equal(200);
+                    scope.should.have.been.calledWith(null);
+                });
+        });
+
+        it('should use a configured scope function', function () {
+            const handlerScopeSpy = sinon.spy();
+            server.route({
+                method: 'GET',
+                path: '/users',
+                handler: {
+                    'db.query': {
+                        model: 'User',
+                        scope: handlerScopeSpy
+                    }
+                }
+            });
+
+            return server.injectThen({
+                method: 'GET',
+                url: '/users'
+            })
+                .then(res => {
+                    res.statusCode.should.equal(200);
+                    handlerScopeSpy.should.have.been.calledOnce;
+                    handlerScopeSpy.firstCall.args.should.have.length(1);
+                });
+        });
+
+        it('should not invoke Model.scope() if no scope is supplied in the route definition', function () {
+            server.route({
+                method: 'GET',
+                path: '/users',
+                handler: {
+                    'db.query': {
+                        model: 'User'
+                    }
+                }
+            });
+
+            return server.injectThen({
+                method: 'GET',
+                url: '/users'
+            })
+                .then(res => {
+                    res.statusCode.should.equal(200);
+                    scope.should.not.have.been.called;
+                });
         });
     });
 });

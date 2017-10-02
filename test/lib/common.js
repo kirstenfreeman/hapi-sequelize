@@ -1,8 +1,8 @@
 'use strict';
 
-var db = require('../db');
-var su = require('../../lib');
-var sequelize = exports.sequelize = db.sequelize;
+const db = require('../db');
+const su = require('../../lib');
+const sequelize = exports.sequelize = db.sequelize;
 
 exports.models = require('../test-models')(sequelize);
 
@@ -11,7 +11,7 @@ su.associate(sequelize);
 su.enableLobSupport();
 // chai assertions
 exports.sinon = require('sinon');
-var chai = exports.chai = require('chai');
+const chai = exports.chai = require('chai');
 chai.use(require('sinon-chai'));
 exports.should = chai.should();
 exports.expect = chai.expect;
