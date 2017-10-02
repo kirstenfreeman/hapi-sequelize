@@ -38,11 +38,14 @@
   },
   "dependencies": {
     "boom": "^4.2.0",
+    "ent-streams": "^1.11.0",
     "ent-utils": "^4.4.0",
     "glib": "^1.0.0",
+    "highland": "^2.11.1",
     "joi": "^9.0.4",
     "lodash": "^3.9.3",
     "moniker": "^0.1.2",
+    "pg-copy-streams": "^1.2.0",
     "pg-large-object": "1.0.1",
     "sequelize": "3.27.x",
     "slug": "^0.9.1"
