@@ -3,12 +3,15 @@
 const common = require('./common');
 const Foo = common.models.Foo;
 const Bar = common.models.Bar;
+const TestBaz = common.models.TestBaz;
+const TestBlah = common.models.TestBlah;
 const sequelize = common.sequelize;
 const DataTypes = sequelize.Sequelize;
 const should = common.should;
 const $ = require('highland');
 const _ = require('lodash');
 const stream = require('stream');
+const P = sequelize.Sequelize.Promise;
 
 describe('bulk upsert plugin', function () {
 
@@ -439,6 +442,28 @@ describe('bulk upsert plugin', function () {
                     })
                     .catch(err => error = err)
                     .finally(() => should.not.exist(error)));
+        });
+
+        it('should forward errors that occur to the dialect for formatting & packaging', function () {
+            const ensure = (Model, rec) => P.resolve()
+                .then(() => {
+                    const instance = Model.build(rec);
+                    instance.set({ parentId: 1 });
+                    return instance.get();
+                })
+                .then(recs => [].concat(recs || []));
+
+            const bazRecordsNoOptional = () => ensure(TestBaz, { bazId: 'myBaz' });
+            const blahRecordsOptional = () => ensure(TestBlah, {
+                optionalId: 'myOptional',
+                bazId: 'myBaz',
+                blahId: 'myBlah'
+            });
+
+            return P.resolve()
+                .then(() => sequelize.requiresTransaction(t => bazRecordsNoOptional().then(recs => TestBaz.bulkUpsertStream(recs, { transaction: t }))))
+                .then(() => sequelize.requiresTransaction(t => blahRecordsOptional().then(recs => TestBlah.bulkUpsertStream(recs, { transaction: t }))))
+                .should.eventually.be.rejectedWith(sequelize.ForeignKeyConstraintError);
         });
     });
 
