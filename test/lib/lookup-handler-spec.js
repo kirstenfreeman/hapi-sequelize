@@ -1,20 +1,17 @@
 'use strict';
 
-var chai = require('chai');
-var should = chai.should();
-var sinon = require('sinon');
+const chai = require('chai');
+const should = chai.should();
+const sinon = require('sinon');
 chai.use(require('sinon-chai'));
-var _ = require('lodash');
-var factory = require('../../lib/lookup-handler');
-var joi = require('joi');
-var Sequelize = require('sequelize');
-var P = Sequelize.Promise;
-var hapi = require('hapi');
-
-var $;
+const _ = require('lodash');
+const factory = require('../../lib/lookup-handler');
+const joi = require('joi');
+const Sequelize = require('sequelize');
+const hapi = require('hapi');
 
 describe('Generic Lookup Handler', function () {
-    var server, finder, thrower, sequelize, scope;
+    let server, finder, thrower, sequelize, scope;
 
     beforeEach(function () {
         //setup mocks
@@ -61,7 +58,7 @@ describe('Generic Lookup Handler', function () {
         server.register(require('inject-then'), done);
     });
 
-    var addRoute = function (cfg) {
+    const addRoute = function (cfg) {
         server.route({ path: '/users/{username}', method: 'get', config: _.assign(cfg, {id: 'user.lookup'})});
     };
 
@@ -83,7 +80,7 @@ describe('Generic Lookup Handler', function () {
                 handler: {
                     'db.lookup': {}
                 }
-            }).should.throw('Error in route /users/{username}: model is required');
+            }).should.throw('Error in route /users/{username}: child "model" fails because ["model" is required]');
 
             addRoute.bind(null, {
                 handler: {
@@ -101,7 +98,7 @@ describe('Generic Lookup Handler', function () {
                         model: 'Account'
                     }
                 }
-            }).should.throw('model must be one of User');
+            }).should.throw('Error in route /users/{username}: child "model" fails because ["model" must be one of [User, Bar]]');
         });
 
         it('should support a where function', function () {
@@ -125,7 +122,7 @@ describe('Generic Lookup Handler', function () {
                         where: {foo: 'bar'}
                     }
                 }
-            }).should.throw('where must be a Function');
+            }).should.throw('Error in route /users/{username}: child "where" fails because ["where" must be a Function]');
         });
 
         it('should support a preLookup extension point that is a function', function () {
@@ -148,7 +145,7 @@ describe('Generic Lookup Handler', function () {
                         preLookup: 'bar'
                     }
                 }
-            }).should.throw('preLookup must be a Function');
+            }).should.throw('Error in route /users/{username}: child "preLookup" fails because ["preLookup" must be a Function]');
         });
 
         it('should support a postLookup extension point that is a function', function () {
@@ -171,7 +168,7 @@ describe('Generic Lookup Handler', function () {
                         postLookup: 'bar'
                     }
                 }
-            }).should.throw('postLookup must be a Function');
+            }).should.throw('Error in route /users/{username}: child "postLookup" fails because ["postLookup" must be a Function]');
         });
 
         it('should return a handler function when invoked', function () {
@@ -187,7 +184,7 @@ describe('Generic Lookup Handler', function () {
                 }
             });
 
-            var route = server.lookup('user.lookup');
+            const route = server.lookup('user.lookup');
             route.settings.validate.query.describe().children.should.have.property('expand');
         });
 
@@ -200,11 +197,9 @@ describe('Generic Lookup Handler', function () {
                     }
                 }
             }).should.not.throw();
-
-            scope.should.have.been.calledWith('customScope');
         });
 
-        it('should support a null scope to unset the default scope', function () {
+        it('should support a null scope', function () {
             addRoute.bind(null, {
                 handler: {
                     'db.lookup': {
@@ -213,20 +208,17 @@ describe('Generic Lookup Handler', function () {
                     }
                 }
             }).should.not.throw();
-
-            scope.should.have.been.calledWith(null);
         });
 
-        it('should not invoke Model.scope() if no scope is supplied', function () {
+        it('should support a scope option that is a function', function () {
             addRoute.bind(null, {
                 handler: {
                     'db.lookup': {
-                        model: 'User'
+                        model: 'User',
+                        scope: _.noop
                     }
                 }
             }).should.not.throw();
-
-            scope.should.not.have.been.called;
         });
 
         describe('handler', function () {
@@ -318,9 +310,9 @@ describe('Generic Lookup Handler', function () {
                     method: 'get',
                     url: '/users/hank?expand=boss'
                 }).then(function (res) {
-                    var body = JSON.parse(res.payload);
+                    const body = JSON.parse(res.payload);
                     res.statusCode.should.equal(400);
-                    body.message.should.equal('single value of expand fails because value must be one of settings');
+                    body.message.should.equal('child "expand" fails because [single value of "expand" fails because ["expand" must be one of [settings]]]');
                 });
             });
 
@@ -339,9 +331,9 @@ describe('Generic Lookup Handler', function () {
                     method: 'get',
                     url: '/bars/snookers?expand=patrons'
                 }).then(function (res) {
-                    var body = JSON.parse(res.payload);
+                    const body = JSON.parse(res.payload);
                     res.statusCode.should.equal(400);
-                    body.message.should.equal('expand is not allowed');
+                    body.message.should.equal('child "expand" fails because [single value of "expand" fails because ["expand" must be one of []]]');
                 });
             });
 
@@ -357,10 +349,10 @@ describe('Generic Lookup Handler', function () {
                 });
 
                 return server.injectThen({
-                    mehod: 'get',
+                    method: 'get',
                     url: '/users/hank'
                 }).then(function (res) {
-                    var body = JSON.parse(res.payload);
+                    const body = JSON.parse(res.payload);
                     body.should.have.property('username', 'hank');
                 });
             });
@@ -377,7 +369,7 @@ describe('Generic Lookup Handler', function () {
                 });
 
                 return server.injectThen({
-                    mehod: 'get',
+                    method: 'get',
                     url: '/bars/snookerz'
                 }).then(function (res) {
                     res.should.have.property('statusCode', 404);
@@ -427,7 +419,7 @@ describe('Generic Lookup Handler', function () {
             });
 
             it('should not call postLookup method if not found', function () {
-                var postLookup = sinon.spy(function() {
+                const postLookup = sinon.spy(function() {
                     return null;
                 });
 
@@ -446,6 +438,95 @@ describe('Generic Lookup Handler', function () {
                     .then(function (res) {
                         res.should.have.property('statusCode', 404);
                         postLookup.callCount.should.equal(0);
+                    });
+            });
+
+            it('should use a configured scope by name', function () {
+                server.route({
+                    method: 'get',
+                    path: '/users/me',
+                    handler: {
+                        'db.lookup': {
+                            model: 'User',
+                            scope: 'customScope'
+                        }
+                    }
+                });
+
+                return server.injectThen({
+                    method: 'GET',
+                    url: '/users/me'
+                })
+                    .then(res => {
+                        res.statusCode.should.equal(200);
+                        scope.should.have.been.calledWith('customScope');
+                    });
+            });
+
+            it('should use a configured null scope to unset the default scope', function () {
+                server.route({
+                    method: 'GET',
+                    path: '/users/me',
+                    handler: {
+                        'db.lookup': {
+                            model: 'User',
+                            scope: null
+                        }
+                    }
+                });
+
+                return server.injectThen({
+                    method: 'GET',
+                    url: '/users/me'
+                })
+                    .then(res => {
+                        res.statusCode.should.equal(200);
+                        scope.should.have.been.calledWith(null);
+                    });
+            });
+
+            it('should use a configured scope function', function () {
+                const handlerScopeSpy = sinon.spy();
+                server.route({
+                    method: 'GET',
+                    path: '/users/me',
+                    handler: {
+                        'db.lookup': {
+                            model: 'User',
+                            scope: handlerScopeSpy
+                        }
+                    }
+                });
+
+                return server.injectThen({
+                    method: 'GET',
+                    url: '/users/me'
+                })
+                    .then(res => {
+                        res.statusCode.should.equal(200);
+                        handlerScopeSpy.should.have.been.calledOnce;
+                        handlerScopeSpy.firstCall.args.should.have.length(1);
+                    });
+            });
+
+            it('should not invoke Model.scope() if no scope is supplied in the route definition', function () {
+                server.route({
+                    method: 'GET',
+                    path: '/users/me',
+                    handler: {
+                        'db.lookup': {
+                            model: 'User'
+                        }
+                    }
+                });
+
+                return server.injectThen({
+                    method: 'GET',
+                    url: '/users/me'
+                })
+                    .then(res => {
+                        res.statusCode.should.equal(200);
+                        scope.should.not.have.been.called;
                     });
             });
         });

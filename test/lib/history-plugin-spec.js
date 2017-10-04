@@ -10,7 +10,7 @@ var DataTypes = sequelize.Sequelize;
 
 chai.use(require('chai-as-promised'));
 
-describe.only('history-plugin', function () {
+describe('history-plugin', function () {
     var Order, OrderHistory;
 
     beforeEach(function () {
@@ -91,7 +91,7 @@ describe.only('history-plugin', function () {
             return OrderHistory.count().should.eventually.equal(0);
         });
 
-        describe.only('when a tracked field is updated', function () {
+        describe('when a tracked field is updated', function () {
             beforeEach(function () {
                 return order.update({ amount: 300.00 });
             });

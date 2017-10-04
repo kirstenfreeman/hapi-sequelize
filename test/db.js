@@ -1,7 +1,7 @@
 'use strict';
 
-var su = require('../lib');
-var Sequelize = su.Sequelize;
+const su = require('../lib');
+const Sequelize = su.Sequelize;
 
 su.enablePlugins();
 su.enableBulkUpsert();
@@ -22,17 +22,17 @@ su.enableRequiresTransaction();
  *
  * 2) in your pg_hba.conf:
  *      - add entry under local:
- *          local	hapi_sequelize	test									trust
+ *          local    hapi_sequelize    test                                    trust
  *      - add entry under IPv4 local connections:
- *          host	hapi_sequelize	test			127.0.0.1/32			trust
+ *          host    hapi_sequelize    test            127.0.0.1/32            trust
  */
-var config = {
+const config = {
     host: 'localhost',
     database: 'hapi_sequelize',
     user: 'test'
 };
 
-var sequelize = new Sequelize(config.database, config.user, config.password, {
+const sequelize = new Sequelize(config.database, config.user, config.password, {
     host: config.host,
     //logging: false,
     dialect: 'postgres'
