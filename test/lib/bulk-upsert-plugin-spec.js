@@ -42,7 +42,12 @@ describe('bulk upsert plugin', function () {
             _.times(5, n => defns.push({
                 id: `id${n}`,
                 immutableAttr: `immutable value ${n}`,
-                name: `My Foo ${n}`
+                name: `My Foo ${n}`,
+                deepMerge: {
+                    [n]: {
+                        [`${n}property`]: n
+                    }
+                }
             }));
             return sequelize.requiresTransaction(t => Foo.bulkUpsertStream(defns, {
                 omit: ['_changes'],
@@ -57,6 +62,7 @@ describe('bulk upsert plugin', function () {
                             f.should.have.property('id', `id${idx}`);
                             f.should.have.property('immutableAttr', `immutable value ${idx}`);
                             f.should.have.property('name', `My Foo ${idx}`);
+                            f.deepMerge[idx][`${idx}property`].should.equal(idx);
                         })
                         .value();
                 });
@@ -67,7 +73,12 @@ describe('bulk upsert plugin', function () {
             _.times(5, n => defns.push({
                 id: `id${n}`,
                 immutableAttr: `immutable value ${n}`,
-                name: `My Foo ${n}`
+                name: `My Foo ${n}`,
+                deepMerge: {
+                    [n]: {
+                        [`${n}property`]: n
+                    }
+                }
             }));
             const $stream = es.readArray(defns);
             return sequelize.requiresTransaction(t => Foo.bulkUpsertStream($stream, {
@@ -83,6 +94,7 @@ describe('bulk upsert plugin', function () {
                             f.should.have.property('id', `id${idx}`);
                             f.should.have.property('immutableAttr', `immutable value ${idx}`);
                             f.should.have.property('name', `My Foo ${idx}`);
+                            f.deepMerge[idx][`${idx}property`].should.equal(idx);
                         })
                         .value();
                 })
@@ -93,22 +105,62 @@ describe('bulk upsert plugin', function () {
             const $records = es.readArray([{
                 id: 'foo',
                 immutableAttr: 'asdf',
-                name: 'My Foo'
+                name: 'My Foo',
+                deepMerge: {
+                    current: {
+                        one: true
+                    }
+                },
+                overwrite: {
+                    current: {
+                        one: true
+                    }
+                }
             },
                 {
                     id: 'bar',
                     immutableAttr: 'fdas',
-                    name: 'My Bar'
+                    name: 'My Bar',
+                    deepMerge: {
+                        old: {
+                            two: false
+                        }
+                    },
+                    overwrite: {
+                        old: {
+                            two: false
+                        }
+                    }
                 }]);
             return Foo.create({
                 id: 'foo',
                 immutableAttr: 'Foo\'s immutable value',
-                name: 'Foo'
+                name: 'Foo',
+                deepMerge: {
+                    old: {
+                        two: false
+                    }
+                },
+                overwrite: {
+                    old: {
+                        two: false
+                    }
+                }
             })
                 .then(() => Foo.create({
                     id: 'bar',
                     immutableAttr: 'Bar\s immutable value',
-                    name: 'Bar'
+                    name: 'Bar',
+                    deepMerge: {
+                        current: {
+                            one: true
+                        }
+                    },
+                    overwrite: {
+                        current: {
+                            one: true
+                        }
+                    }
                 }))
                 .then(() => sequelize.requiresTransaction(t => Foo.bulkUpsertStream($records, {
                     omit: ['_changes'],
@@ -121,8 +173,16 @@ describe('bulk upsert plugin', function () {
                         ['foo', 'bar'].should.include(f.id);
                         if (f.id === 'foo') {
                             f.name.should.equal('My Foo');
+                            f.overwrite.current.one.should.equal(true);
+                            should.not.exist(f.overwrite.old);
+                            should.exist(f.deepMerge.old);
+                            should.exist(f.deepMerge.current);
                         } else {
                             f.name.should.equal('My Bar');
+                            f.overwrite.old.two.should.equal(false);
+                            should.not.exist(f.overwrite.current);
+                            should.exist(f.deepMerge.old);
+                            should.exist(f.deepMerge.current);
                         }
                     });
                 });
@@ -132,22 +192,62 @@ describe('bulk upsert plugin', function () {
             const records = [{
                 id: 'foo',
                 immutableAttr: 'asdf',
-                name: 'My Foo'
+                name: 'My Foo',
+                deepMerge: {
+                    current: {
+                        one: true
+                    }
+                },
+                overwrite: {
+                    current: {
+                        one: true
+                    }
+                }
             },
                 {
                     id: 'bar',
                     immutableAttr: 'fdas',
-                    name: 'My Bar'
+                    name: 'My Bar',
+                    deepMerge: {
+                        old: {
+                            two: false
+                        }
+                    },
+                    overwrite: {
+                        old: {
+                            two: false
+                        }
+                    }
                 }];
             return Foo.create({
                 id: 'foo',
                 immutableAttr: 'Foo\'s immutable value',
-                name: 'Foo'
+                name: 'Foo',
+                deepMerge: {
+                    old: {
+                        two: false
+                    }
+                },
+                overwrite: {
+                    old: {
+                        two: false
+                    }
+                }
             })
                 .then(() => Foo.create({
                     id: 'bar',
                     immutableAttr: 'Bar\s immutable value',
-                    name: 'Bar'
+                    name: 'Bar',
+                    deepMerge: {
+                        current: {
+                            one: true
+                        }
+                    },
+                    overwrite: {
+                        current: {
+                            one: true
+                        }
+                    }
                 }))
                 .then(() => sequelize.requiresTransaction(t => Foo.bulkUpsertStream(records, {
                     omit: ['_changes'],
@@ -160,8 +260,16 @@ describe('bulk upsert plugin', function () {
                         ['foo', 'bar'].should.include(f.id);
                         if (f.id === 'foo') {
                             f.name.should.equal('My Foo');
+                            f.overwrite.current.one.should.equal(true);
+                            should.not.exist(f.overwrite.old);
+                            should.exist(f.deepMerge.old);
+                            should.exist(f.deepMerge.current);
                         } else {
                             f.name.should.equal('My Bar');
+                            f.overwrite.old.two.should.equal(false);
+                            should.not.exist(f.overwrite.current);
+                            should.exist(f.deepMerge.old);
+                            should.exist(f.deepMerge.current);
                         }
                     });
                 });
@@ -169,14 +277,66 @@ describe('bulk upsert plugin', function () {
 
         it('should insert and update from a stream', function () {
             const $records = es.readArray([
-                { id: 'bar', immutableAttr: 'aaa', name: 'Bar' },
-                { id: 'foo', immutableAttr: 'zzz', name: 'Upserted Foo' },
-                { id: 'baz', immutableAttr: 'bbb', name: 'BAZZZZZ' }
+                {
+                    id: 'bar',
+                    immutableAttr: 'aaa',
+                    name: 'Bar',
+                    deepMerge: {
+                        old: {
+                            two: false
+                        }
+                    },
+                    overwrite: {
+                        old: {
+                            two: false
+                        }
+                    }
+                },
+                {
+                    id: 'foo',
+                    immutableAttr: 'zzz',
+                    name: 'Upserted Foo',
+                    deepMerge: {
+                        current: {
+                            one: true
+                        }
+                    },
+                    overwrite: {
+                        current: {
+                            one: true
+                        }
+                    }
+                },
+                {
+                    id: 'baz',
+                    immutableAttr: 'bbb',
+                    name: 'BAZZZZZ',
+                    deepMerge: {
+                        extra: {
+                            three: true
+                        }
+                    },
+                    overwrite: {
+                        extra: {
+                            three: true
+                        }
+                    }
+                }
             ]);
             return Foo.create({
                 id: 'foo',
                 immutableAttr: 'immutable',
-                name: 'Foo'
+                name: 'Foo',
+                deepMerge: {
+                    start: {
+                        three: true
+                    }
+                },
+                overwrite: {
+                    start: {
+                        three: true
+                    }
+                }
             })
                 .then(() => sequelize.requiresTransaction(t => Foo.bulkUpsertStream($records, {
                     omit: ['_changes'],
@@ -190,12 +350,19 @@ describe('bulk upsert plugin', function () {
                         if (foo.id === 'foo') {
                             foo.name.should.equal('Upserted Foo');
                             foo.immutableAttr.should.equal('zzz');
+                            foo.deepMerge.current.one.should.equal(true);
+                            foo.deepMerge.start.three.should.equal(true);
+                            foo.overwrite.current.one.should.equal(true);
                         } else if (foo.id === 'bar') {
                             foo.name.should.equal('Bar');
                             foo.immutableAttr.should.equal('aaa');
+                            foo.deepMerge.old.two.should.equal(false);
+                            foo.overwrite.old.two.should.equal(false);
                         } else if (foo.id === 'baz') {
                             foo.name.should.equal('BAZZZZZ');
                             foo.immutableAttr.should.equal('bbb');
+                            foo.deepMerge.extra.three.should.equal(true);
+                            foo.overwrite.extra.three.should.equal(true);
                         } else {
                             throw new Error(`Got an unknown id: ${foo.id}`);
                         }
@@ -205,14 +372,66 @@ describe('bulk upsert plugin', function () {
 
         it('should insert and update from an array', function () {
             const records = [
-                { id: 'bar', immutableAttr: 'aaa', name: 'Bar' },
-                { id: 'foo', immutableAttr: 'zzz', name: 'Upserted Foo' },
-                { id: 'baz', immutableAttr: 'bbb', name: 'BAZZZZZ' }
+                {
+                    id: 'bar',
+                    immutableAttr: 'aaa',
+                    name: 'Bar',
+                    deepMerge: {
+                        old: {
+                            two: false
+                        }
+                    },
+                    overwrite: {
+                        old: {
+                            two: false
+                        }
+                    }
+                },
+                {
+                    id: 'foo',
+                    immutableAttr: 'zzz',
+                    name: 'Upserted Foo',
+                    deepMerge: {
+                        current: {
+                            one: true
+                        }
+                    },
+                    overwrite: {
+                        current: {
+                            one: true
+                        }
+                    }
+                },
+                {
+                    id: 'baz',
+                    immutableAttr: 'bbb',
+                    name: 'BAZZZZZ',
+                    deepMerge: {
+                        extra: {
+                            three: true
+                        }
+                    },
+                    overwrite: {
+                        extra: {
+                            three: true
+                        }
+                    }
+                }
             ];
             return Foo.create({
                 id: 'foo',
                 immutableAttr: 'immutable',
-                name: 'Foo'
+                name: 'Foo',
+                deepMerge: {
+                    start: {
+                        three: true
+                    }
+                },
+                overwrite: {
+                    start: {
+                        three: true
+                    }
+                }
             })
                 .then(() => sequelize.requiresTransaction(t => Foo.bulkUpsertStream(records, {
                     omit: ['_changes'],
@@ -226,12 +445,19 @@ describe('bulk upsert plugin', function () {
                         if (foo.id === 'foo') {
                             foo.name.should.equal('Upserted Foo');
                             foo.immutableAttr.should.equal('zzz');
+                            foo.deepMerge.current.one.should.equal(true);
+                            foo.deepMerge.start.three.should.equal(true);
+                            foo.overwrite.current.one.should.equal(true);
                         } else if (foo.id === 'bar') {
                             foo.name.should.equal('Bar');
                             foo.immutableAttr.should.equal('aaa');
+                            foo.deepMerge.old.two.should.equal(false);
+                            foo.overwrite.old.two.should.equal(false);
                         } else if (foo.id === 'baz') {
                             foo.name.should.equal('BAZZZZZ');
                             foo.immutableAttr.should.equal('bbb');
+                            foo.deepMerge.extra.three.should.equal(true);
+                            foo.overwrite.extra.three.should.equal(true);
                         } else {
                             throw new Error(`Got an unknown id: ${foo.id}`);
                         }
@@ -336,17 +562,47 @@ describe('bulk upsert plugin', function () {
                 const $records = es.readArray([{
                     id: 'foo',
                     immutableAttr: 'asdf',
-                    name: 'My Foo'
+                    name: 'My Foo',
+                    deepMerge: {
+                        current: {
+                            one: true
+                        }
+                    },
+                    overwrite: {
+                        current: {
+                            one: true
+                        }
+                    }
                 },
                     {
                         id: 'foo',
                         immutableAttr: 'this wont be a value',
-                        name: 'FOO'
+                        name: 'FOO',
+                        deepMerge: {
+                            current: {
+                                one: false
+                            }
+                        },
+                        overwrite: {
+                            current: {
+                                one: false
+                            }
+                        }
                     }]);
                 return Foo.create({
                     id: 'foo',
                     immutableAttr: 'Foo\'s immutable value',
-                    name: 'Foo'
+                    name: 'Foo',
+                    deepMerge: {
+                        old: {
+                            two: false
+                        }
+                    },
+                    overwrite: {
+                        old: {
+                            two: false
+                        }
+                    }
                 })
                     .then(() => Foo.bulkUpsertStream($records, { omit: ['_changes'] }))
                     .catch(err => upsertError = err)
@@ -358,24 +614,91 @@ describe('bulk upsert plugin', function () {
                                 _.first(foos).id.should.equal('foo');
                                 _.first(foos).immutableAttr.should.equal(`Foo's immutable value`);
                                 _.first(foos).name.should.equal('Foo');
+                                _.first(foos).deepMerge.old.two.should.equal(false);
+                                _.first(foos).overwrite.old.two.should.equal(false);
                             });
                     });
             });
 
             it('should not prevent further interaction if an error occurs', function () {
                 const badRecords = [
-                    { id: 'bar', immutableAttr: 'aaa', name: 'Bar' },
-                    { id: 'bar', immutableAttr: 'aaaaaa', name: 'BarBar' }
+                    {
+                        id: 'bar',
+                        immutableAttr: 'aaa',
+                        name: 'Bar',
+                        deepMerge: {
+                            current: {
+                                one: true
+                            }
+                        },
+                        overwrite: {
+                            current: {
+                                one: true
+                            }
+                        }
+                    },
+                    {
+                        id: 'bar',
+                        immutableAttr: 'aaaaaa',
+                        name: 'BarBar',
+                        deepMerge: {
+                            current: {
+                                one: false
+                            }
+                        },
+                        overwrite: {
+                            current: {
+                                one: false
+                            }
+                        }
+                    }
                 ];
                 const goodRecords = [
-                    { id: 'bar', immutableAttr: 'aaa', name: 'BAR' },
-                    { id: 'foo', immutableAttr: 'aaaaaa', name: 'FOOFOO' }
+                    {
+                        id: 'bar',
+                        immutableAttr: 'aaa',
+                        name: 'BAR',
+                        deepMerge: {
+                            current: {
+                                one: true
+                            }
+                        },
+                        overwrite: {
+                            current: {
+                                one: true
+                            }
+                        }},
+                    {
+                        id: 'foo',
+                        immutableAttr: 'aaaaaa',
+                        name: 'FOOFOO',
+                        deepMerge: {
+                            current: {
+                                one: false
+                            }
+                        },
+                        overwrite: {
+                            current: {
+                                one: false
+                            }
+                        }
+                    }
                 ];
                 let badRecErr, goodRecErr;
                 return Foo.create({
                     id: 'foo',
                     immutableAttr: 'immutable',
-                    name: 'Foo'
+                    name: 'Foo',
+                    deepMerge: {
+                        old: {
+                            one: true
+                        }
+                    },
+                    overwrite: {
+                        old: {
+                            one: true
+                        }
+                    }
                 })
                     .then(() => sequelize.requiresTransaction(t => Foo.bulkUpsertStream(badRecords, {
                         omit: ['_changes'],
@@ -543,13 +866,51 @@ describe('bulk upsert plugin', function () {
 
         it('should insert and update', function () {
             const records = [
-                { id: 'bar', immutableAttr: 'aaa', name: 'Bar' },
-                { id: 'foo', immutableAttr: 'zzz', name: 'Upserted Foo' }
+                {
+                    id: 'bar',
+                    immutableAttr: 'aaa',
+                    name: 'Bar',
+                    deepMerge: {
+                        old: {
+                            two: false
+                        }
+                    },
+                    overwrite: {
+                        old: {
+                            two: false
+                        }
+                    }
+                },
+                {
+                    id: 'foo',
+                    immutableAttr: 'zzz',
+                    name: 'Upserted Foo',
+                    deepMerge: {
+                        current: {
+                            one: true
+                        }
+                    },
+                    overwrite: {
+                        current: {
+                            one: true
+                        }
+                    }
+                }
             ];
             return Foo.create({
                 id: 'foo',
                 immutableAttr: 'immutable',
-                name: 'Foo'
+                name: 'Foo',
+                deepMerge: {
+                    start: {
+                        three: true
+                    }
+                },
+                overwrite: {
+                    start: {
+                        three: true
+                    }
+                }
             })
                 .then(() => sequelize.requiresTransaction(t => Foo.bulkUpsert(records, {
                     omit: ['_changes'],
@@ -563,9 +924,15 @@ describe('bulk upsert plugin', function () {
                             if (foo.id === 'foo') {
                                 foo.name.should.equal('Upserted Foo');
                                 foo.immutableAttr.should.equal('zzz');
+                                foo.deepMerge.current.one.should.equal(true);
+                                foo.deepMerge.start.three.should.equal(true);
+                                foo.overwrite.current.one.should.equal(true);
+                                should.not.exist(foo.overwrite.start);
                             } else if (foo.id === 'bar') {
                                 foo.name.should.equal('Bar');
                                 foo.immutableAttr.should.equal('aaa');
+                                foo.deepMerge.old.two.should.equal(false);
+                                foo.overwrite.old.two.should.equal(false);
                             } else {
                                 throw new Error(`Got an unknown id: ${foo.id}`);
                             }

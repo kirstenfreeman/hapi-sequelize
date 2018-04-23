@@ -10,7 +10,13 @@ module.exports = function (sequelize) {
         naturalId: { type: DataTypes.STRING, allowNull: false, unique: 'naturalId' },
 
         // a data field representing a name eg. 'Bar'
-        name: DataTypes.STRING
+        name: DataTypes.STRING,
+
+        // a jsonb field to deep merge
+        deepMerge: { type: DataTypes.JSONB, onConflict: 'DEEP_MERGE' },
+
+        // a jsonb field to overwrite
+        overwrite: { type: DataTypes.JSONB }
     };
 
     const options = {
