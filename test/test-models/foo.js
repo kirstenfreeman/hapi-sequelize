@@ -36,5 +36,5 @@ module.exports = function (sequelize) {
                 }
             });
         })
-        .plugin(su.restoreDefaultsPlugin);
+        .plugin(su.restoreDefaultsPlugin());
 };
