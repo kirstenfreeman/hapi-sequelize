@@ -2,6 +2,7 @@
 
 var chai = require('chai');
 var should = chai.should();
+var expect = chai.expect;
 var sinon = require('sinon');
 chai.use(require('sinon-chai'));
 var _ = require('lodash');
@@ -431,7 +432,7 @@ describe('Generic Update Handler', function () {
                 url: '/bars/snookerz'
             }).then(function (res) {
                 res.should.have.property('statusCode', 201);
-                res.headers.should.have.property('location', '/bars/snookerz');
+                expect(res.headers).to.have.property('location', '/bars/snookerz');
             });
         });
 
