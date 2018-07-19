@@ -29,7 +29,7 @@ su.enableRequiresTransaction();
 const config = {
     host: 'localhost',
     database: 'hapi_sequelize',
-    user: 'test'
+    user: 'i5'
 };
 
 const sequelize = new Sequelize(config.database, config.user, config.password, {

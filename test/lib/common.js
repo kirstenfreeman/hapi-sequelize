@@ -9,6 +9,8 @@ exports.models = require('../test-models')(sequelize);
 //create associations after all models are defined
 su.associate(sequelize);
 su.enableLobSupport();
+
+sequelize.patchUpsert();
 // chai assertions
 exports.sinon = require('sinon');
 const chai = exports.chai = require('chai');

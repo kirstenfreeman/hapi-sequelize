@@ -7,6 +7,8 @@ module.exports = _.curry(function (sequelize) {
         Foo: require('./foo')(sequelize),
         Bar: require('./bar')(sequelize),
         TestBaz: require('./test-baz')(sequelize),
-        TestBlah: require('./test-blah')(sequelize)
+        TestBlah: require('./test-blah')(sequelize),
+        UpsertModel: require('./upsert-model')(sequelize),
+        MultipartUpsertModel: require('./multipart-upsert-model')(sequelize)
     };
 });
