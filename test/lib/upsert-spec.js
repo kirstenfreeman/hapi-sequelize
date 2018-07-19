@@ -3,7 +3,7 @@
 const common = require('./common');
 const { UpsertModel, MultipartUpsertModel } = common.models;
 
-describe.only('native upsert plugin', function () {
+describe('native upsert plugin', function () {
     describe('for a single part unique constraint', function () {
         describe('when no record exists', function () {
             it('should insert', async function () {
