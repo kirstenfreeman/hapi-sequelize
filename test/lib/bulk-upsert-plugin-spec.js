@@ -13,7 +13,7 @@ const stream = require('stream');
 const es = require('ent-streams');
 const P = sequelize.Sequelize.Promise;
 
-describe.only('bulk upsert plugin', function () {
+describe('bulk upsert plugin', function () {
 
     describe('.bulkUpsertStream()', function () {
 
