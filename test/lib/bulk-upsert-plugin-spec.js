@@ -284,9 +284,7 @@ describe('bulk upsert plugin', function () {
                             b.id.should.be.a('string');
                             b.id.should.equal(b.name.toUpperCase());
                         });
-                    })
-                    .catch(err => error = err)
-                    .finally(() => should.not.exist(error)));
+                    }));
 
         });
 
@@ -310,9 +308,7 @@ describe('bulk upsert plugin', function () {
                         bazz.should.have.length(1);
                         _.first(bazz).name.should.equal('BazBaz');
                         _.first(bazz).data.should.equal('Some data for BazBaz');
-                    })
-                    .catch(err => error = err)
-                    .finally(() => should.not.exist(error)));
+                    }));
         });
 
         it('should remap record values for primary key field with different db column name', function () {
@@ -331,8 +327,7 @@ describe('bulk upsert plugin', function () {
                         bazz.should.have.length(1);
                         _.first(bazz).name.should.equal('BazBaz');
                     })
-                    .catch(err => error = err)
-                    .finally(() => should.not.exist(error)));
+                    .catch(err => error = err));
         });
 
         describe('errors', function () {
@@ -606,9 +601,7 @@ describe('bulk upsert plugin', function () {
                             b.id.should.be.a('string');
                             b.id.should.equal(b.name.toUpperCase());
                         });
-                    })
-                    .catch(err => error = err)
-                    .finally(() => should.not.exist(error)));
+                    }));
 
         });
 
@@ -632,9 +625,7 @@ describe('bulk upsert plugin', function () {
                         bazz.should.have.length(1);
                         _.first(bazz).name.should.equal('BazBaz');
                         _.first(bazz).data.should.equal('Some data for BazBaz');
-                    })
-                    .catch(err => error = err)
-                    .finally(() => should.not.exist(error)));
+                    }));
         });
 
         it('should remap record values for primary key field with different db column name', function () {
@@ -652,9 +643,7 @@ describe('bulk upsert plugin', function () {
                         should.exist(bazz);
                         bazz.should.have.length(1);
                         _.first(bazz).name.should.equal('BazBaz');
-                    })
-                    .catch(err => error = err)
-                    .finally(() => should.not.exist(error)));
+                    }));
         });
     });
 });
