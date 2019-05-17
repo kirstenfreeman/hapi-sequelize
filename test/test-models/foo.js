@@ -13,7 +13,13 @@ module.exports = function (sequelize) {
         immutableAttr: {type: DataTypes.STRING, allowNull: false},
 
         // a data field representing a name eg. 'Bar'
-        name: DataTypes.STRING
+        name: DataTypes.STRING,
+
+        // a jsonb field to deep merge
+        deepMerge: { type: DataTypes.JSONB, onConflict: 'DEEP_MERGE' },
+
+        // a jsonb field to overwrite
+        overwrite: { type: DataTypes.JSONB }
     };
 
     var options = {
