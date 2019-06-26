@@ -16,6 +16,7 @@
     "author": "",
     "license": "MIT",
     "devDependencies": {
+        "bluebird": "~2.11.0",
         "chai": "^2.1.2",
         "chai-as-promised": "^5.3.0",
         "gulp": "^3.8.11",
@@ -32,7 +33,6 @@
         "mocha": "^2.2.1",
         "pg": "^6.1.0",
         "pg-hstore": "^2.3.2",
-        "pg-native": "^1.10.0",
         "sinon": "^1.13.0",
         "sinon-chai": "^2.8.0"
     },
@@ -48,5 +48,8 @@
         "pg-large-object": "1.0.1",
         "sequelize": "3.27.x",
         "slug": "^0.9.1"
+    },
+    "optionalDependencies": {
+        "pg-native": "^1.10.0"
     }
 }
