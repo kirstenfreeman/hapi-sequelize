@@ -36,7 +36,7 @@ describe('Generic Update Handler', function () {
                 save: saver,
                 isNewRecord: false
             };
-            
+
             return Sequelize.Promise.resolve(instance);
         });
 
@@ -96,7 +96,7 @@ describe('Generic Update Handler', function () {
     });
 
     var addRoute = function (cfg) {
-        server.route({path: '/users/{username}', method: 'put', config: _.assign(cfg, {id: 'user.update'})});
+        server.route({ path: '/users/{username}', method: 'put', config: _.assign(cfg, { id: 'user.update' }) });
     };
 
     describe('registration', function () {
@@ -156,7 +156,7 @@ describe('Generic Update Handler', function () {
                 handler: {
                     'db.update': {
                         model: 'User',
-                        where: {foo: 'bar'}
+                        where: { foo: 'bar' }
                     }
                 }
             }).should.throw('Error in route /users/{username}: child "where" fails because ["where" must be a Function]');
@@ -231,7 +231,7 @@ describe('Generic Update Handler', function () {
         });
 
         it('should return a handler function when invoked', function () {
-            factory(sequelize, {model: 'User'}).should.be.a('function');
+            factory(sequelize, { model: 'User' }).should.be.a('function');
         });
 
         it('should support a scope option', function () {
@@ -266,6 +266,17 @@ describe('Generic Update Handler', function () {
                 }
             }).should.not.throw();
         });
+
+        it(`should support a scope option that is an array of strings`, () => {
+            addRoute.bind(null, {
+                handler: {
+                    'db.update': {
+                        model: 'User',
+                        scope: ['scope_one', 'scope_two']
+                    }
+                }
+            }).should.not.throw();
+        });
     });
 
     describe('handler', function () {
@@ -288,12 +299,12 @@ describe('Generic Update Handler', function () {
                 }
             }).then(function (res) {
                 res.statusCode.should.equal(200);
-                finder.should.have.been.calledWith({ transaction: undefined, where: {username: 'robert'} });
+                finder.should.have.been.calledWith({ transaction: undefined, where: { username: 'robert' } });
                 saver.firstCall.thisValue.should.have.property('username', 'robert');
                 saver.firstCall.thisValue.should.have.property('change', 'changeit');
             });
         });
-        
+
         it('should require parameters', function () {
             server.route({
                 method: 'put',
@@ -325,7 +336,7 @@ describe('Generic Update Handler', function () {
                         'db.update': {
                             model: 'User',
                             where: function (req) {
-                                return {username: req.query.username};
+                                return { username: req.query.username };
                             }
                         }
                     },
@@ -345,7 +356,7 @@ describe('Generic Update Handler', function () {
                 }
             }).then(function (res) {
                 res.statusCode.should.equal(200);
-                finder.should.have.been.calledWith({ transaction: undefined, where: {username: 'robert'} });
+                finder.should.have.been.calledWith({ transaction: undefined, where: { username: 'robert' } });
                 saver.firstCall.thisValue.should.have.property('username', 'robert');
                 saver.firstCall.thisValue.should.have.property('change', 'changeit');
             });
@@ -420,7 +431,7 @@ describe('Generic Update Handler', function () {
                     'db.update': {
                         model: 'Bar',
                         create: true,
-                        postCreate: function(req, instance, reply) {
+                        postCreate: function (req, instance, reply) {
                             reply(instance).created('/bars/snookerz');
                         }
                     }
@@ -507,7 +518,7 @@ describe('Generic Update Handler', function () {
             })
                 .then(res => {
                     res.statusCode.should.equal(200);
-                    scope.should.have.been.calledWith('customScope');
+                    scope.should.have.been.calledWith(['customScope']);
                 });
         });
 
@@ -554,6 +565,28 @@ describe('Generic Update Handler', function () {
                     res.statusCode.should.equal(200);
                     handlerScopeSpy.should.have.been.calledOnce;
                     handlerScopeSpy.firstCall.args.should.have.length(1);
+                });
+        });
+
+        it(`should use a configured scope array of scope names`, () => {
+            server.route({
+                method: 'put',
+                path: '/users/{userId}',
+                handler: {
+                    'db.update': {
+                        model: 'User',
+                        scope: ['scope_one', 'scope_two']
+                    }
+                }
+            });
+
+            return server.injectThen({
+                method: 'put',
+                url: '/users/me'
+            })
+                .then(res => {
+                    res.statusCode.should.equal(200);
+                    scope.should.have.been.calledWith(['scope_one', 'scope_two']);
                 });
         });
 

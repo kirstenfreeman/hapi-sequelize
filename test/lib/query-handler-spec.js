@@ -399,6 +399,17 @@ describe('QueryHandler', function () {
                 }
             }).should.not.throw();
         });
+
+        it(`should support a scope option that is an array of strings`, () => {
+            addRoute.bind(null, {
+                handler: {
+                    'db.query': {
+                        model: 'User',
+                        scope: ['scope_one', 'scope_two']
+                    }
+                }
+            }).should.not.throw();
+        });
     });
 
     describe('route handler', function () {
@@ -783,7 +794,7 @@ describe('QueryHandler', function () {
             })
                 .then(res => {
                     res.statusCode.should.equal(200);
-                    scope.should.have.been.calledWith('customScope');
+                    scope.should.have.been.calledWith(['customScope']);
                 });
         });
 
@@ -830,6 +841,28 @@ describe('QueryHandler', function () {
                     res.statusCode.should.equal(200);
                     handlerScopeSpy.should.have.been.calledOnce;
                     handlerScopeSpy.firstCall.args.should.have.length(1);
+                });
+        });
+
+        it(`should use a configured scope array of scope names`, () => {
+            server.route({
+                method: 'get',
+                path: '/users',
+                handler: {
+                    'db.query': {
+                        model: 'User',
+                        scope: ['scope_one', 'scope_two']
+                    }
+                }
+            });
+
+            return server.injectThen({
+                method: 'GET',
+                url: '/users'
+            })
+                .then(res => {
+                    res.statusCode.should.equal(200);
+                    scope.should.have.been.calledWith(['scope_one', 'scope_two']);
                 });
         });
 

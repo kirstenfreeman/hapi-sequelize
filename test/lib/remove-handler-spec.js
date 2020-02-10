@@ -14,12 +14,16 @@ var hapi = require('hapi');
 var $;
 
 describe('Generic Remove Handler', function () {
-    var server, destroyer, sequelize, transFunction;
+    var server, destroyer, sequelize, transFunction, scope;
 
     beforeEach(function () {
         //setup mocks
         destroyer = sinon.spy(function (opts) {
             return Sequelize.Promise.resolve(opts);
+        });
+
+        scope = sinon.spy(function () {
+            return sequelize.models.Foo;
         });
 
         sequelize = {
@@ -29,7 +33,8 @@ describe('Generic Remove Handler', function () {
                         bar: {},
                         baz: {}
                     },
-                    destroy: destroyer
+                    destroy: destroyer,
+                    scope: scope
                 }
             },
             requiresTransaction: function (transactedFunction) {
@@ -188,6 +193,50 @@ describe('Generic Remove Handler', function () {
             }).should.not.throw();
         });
 
+        it('should support a scope option', function () {
+            addRoute.bind(null, {
+                handler: {
+                    'db.remove': {
+                        model: 'Foo',
+                        scope: 'customScope'
+                    }
+                }
+            }).should.not.throw();
+        });
+
+        it('should support a null scope', function () {
+            addRoute.bind(null, {
+                handler: {
+                    'db.remove': {
+                        model: 'Foo',
+                        scope: null
+                    }
+                }
+            }).should.not.throw();
+        });
+
+        it('should support a scope option that is a function', function () {
+            addRoute.bind(null, {
+                handler: {
+                    'db.remove': {
+                        model: 'Foo',
+                        scope: _.noop
+                    }
+                }
+            }).should.not.throw();
+        });
+
+        it(`should support a scope option that is an array of strings`, () => {
+            addRoute.bind(null, {
+                handler: {
+                    'db.remove': {
+                        model: 'Foo',
+                        scope: ['scope_one', 'scope_two']
+                    }
+                }
+            }).should.not.throw();
+        });
+
         describe('handler', function () {
             it('should delete the model when no other options are given', function () {
                 server.route({
@@ -288,6 +337,117 @@ describe('Generic Remove Handler', function () {
                         individualHooks: false
                     });
                 });
+            });
+
+            it('should use a configured scope by name', function () {
+                server.route({
+                    path: '/{bar}/foo',
+                    method: 'delete',
+                    handler: {
+                        'db.remove': {
+                            model: 'Foo',
+                            scope: 'customScope'
+                        }
+                    }
+                });
+
+                return server.injectThen({
+                    method: 'delete',
+                    url: '/baz/foo'
+                })
+                    .then(res => {
+                        res.statusCode.should.equal(200);
+                        scope.should.have.been.calledWith(['customScope']);
+                    });
+            });
+
+            it('should use a configured null scope to unset the default scope', function () {
+                server.route({
+                    path: '/{bar}/foo',
+                    method: 'delete',
+                    handler: {
+                        'db.remove': {
+                            model: 'Foo',
+                            scope: null
+                        }
+                    }
+                });
+
+                return server.injectThen({
+                    method: 'delete',
+                    url: '/baz/foo'
+                })
+                    .then(res => {
+                        res.statusCode.should.equal(200);
+                        scope.should.have.been.calledWith(null);
+                    });
+            });
+
+            it('should use a configured scope function', function () {
+                const handlerScopeSpy = sinon.spy();
+                server.route({
+                    path: '/{bar}/foo',
+                    method: 'delete',
+                    handler: {
+                        'db.remove': {
+                            model: 'Foo',
+                            scope: handlerScopeSpy
+                        }
+                    }
+                });
+
+                return server.injectThen({
+                    method: 'delete',
+                    url: '/baz/foo'
+                })
+                    .then(res => {
+                        res.statusCode.should.equal(200);
+                        handlerScopeSpy.should.have.been.calledOnce;
+                        handlerScopeSpy.firstCall.args.should.have.length(1);
+                    });
+            });
+
+            it(`should use a configured scope array of scope names`, () => {
+                server.route({
+                    path: '/{bar}/foo',
+                    method: 'delete',
+                    handler: {
+                        'db.remove': {
+                            model: 'Foo',
+                            scope: ['scope_one', 'scope_two']
+                        }
+                    }
+                });
+
+                return server.injectThen({
+                    method: 'delete',
+                    url: '/baz/foo'
+                })
+                    .then(res => {
+                        res.statusCode.should.equal(200);
+                        scope.should.have.been.calledWith(['scope_one', 'scope_two']);
+                    });
+            });
+
+            it('should not invoke Model.scope() if no scope is supplied in the route definition', function () {
+                server.route({
+                    path: '/{bar}/foo',
+                    method: 'delete',
+                    handler: {
+                        'db.remove': {
+                            model: 'Foo'
+                        }
+                    }
+                });
+
+                return server.injectThen({
+                    method: 'delete',
+                    url: '/baz/foo'
+                })
+                    .then(res => {
+                        res.statusCode.should.equal(200);
+                        scope.should.not.have.been.called;
+                    });
             });
         });
     });

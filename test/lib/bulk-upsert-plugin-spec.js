@@ -15,6 +15,8 @@ const P = sequelize.Sequelize.Promise;
 
 describe('bulk upsert plugin', function () {
 
+    // NOTE: this test now only works if jsonb_deep_merge function exists
+
     describe('.bulkUpsertStream()', function () {
 
         it('should add the function to the prototype of Model', function () {
