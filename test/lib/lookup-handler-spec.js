@@ -15,7 +15,7 @@ describe('Generic Lookup Handler', function () {
 
     beforeEach(function () {
         //setup mocks
-        finder = sinon.spy(function (opts){
+        finder = sinon.spy(function (opts) {
             return Sequelize.Promise.resolve({ username: opts.where && opts.where.username });
         });
 
@@ -59,7 +59,7 @@ describe('Generic Lookup Handler', function () {
     });
 
     const addRoute = function (cfg) {
-        server.route({ path: '/users/{username}', method: 'get', config: _.assign(cfg, {id: 'user.lookup'})});
+        server.route({ path: '/users/{username}', method: 'get', config: _.assign(cfg, { id: 'user.lookup' }) });
     };
 
     describe('registration', function () {
@@ -106,7 +106,7 @@ describe('Generic Lookup Handler', function () {
                 handler: {
                     'db.lookup': {
                         model: 'User',
-                        where: function(){
+                        where: function () {
 
                         }
                     }
@@ -119,7 +119,7 @@ describe('Generic Lookup Handler', function () {
                 handler: {
                     'db.lookup': {
                         model: 'User',
-                        where: {foo: 'bar'}
+                        where: { foo: 'bar' }
                     }
                 }
             }).should.throw('Error in route /users/{username}: child "where" fails because ["where" must be a Function]');
@@ -130,7 +130,7 @@ describe('Generic Lookup Handler', function () {
                 handler: {
                     'db.lookup': {
                         model: 'User',
-                        preLookup: function() {
+                        preLookup: function () {
                         }
                     }
                 }
@@ -153,7 +153,7 @@ describe('Generic Lookup Handler', function () {
                 handler: {
                     'db.lookup': {
                         model: 'User',
-                        postLookup: function() {
+                        postLookup: function () {
                         }
                     }
                 }
@@ -172,7 +172,7 @@ describe('Generic Lookup Handler', function () {
         });
 
         it('should return a handler function when invoked', function () {
-            factory(sequelize, {model: 'User'}).should.be.a('function');
+            factory(sequelize, { model: 'User' }).should.be.a('function');
         });
 
         it('should set route validation', function () {
@@ -221,6 +221,17 @@ describe('Generic Lookup Handler', function () {
             }).should.not.throw();
         });
 
+        it(`should support a scope option that is an array of strings`, () => {
+            addRoute.bind(null, {
+                handler: {
+                    'db.lookup': {
+                        model: 'User',
+                        scope: ['scope_one', 'scope_two']
+                    }
+                }
+            }).should.not.throw();
+        });
+
         describe('handler', function () {
             it('should look up the model using path params as a natural id', function () {
                 server.route({
@@ -238,7 +249,7 @@ describe('Generic Lookup Handler', function () {
                     url: '/users/bleupen'
                 }).then(function (res) {
                     res.statusCode.should.equal(200);
-                    finder.should.have.been.calledWith({ where: { username: 'bleupen' }});
+                    finder.should.have.been.calledWith({ where: { username: 'bleupen' } });
                 });
             });
 
@@ -268,7 +279,7 @@ describe('Generic Lookup Handler', function () {
                     url: '/users?username=hank'
                 }).then(function (res) {
                     res.statusCode.should.equal(200);
-                    finder.should.have.been.calledWith({ where: { username: 'hank'}});
+                    finder.should.have.been.calledWith({ where: { username: 'hank' } });
                 });
             });
 
@@ -289,7 +300,7 @@ describe('Generic Lookup Handler', function () {
                 }).then(function (res) {
                     res.statusCode.should.equal(200);
                     finder.should.have.been.calledWith({
-                        include: [ sequelize.models.User.associations.settings ],
+                        include: [sequelize.models.User.associations.settings],
                         where: { username: 'hank' }
                     });
                 });
@@ -393,7 +404,10 @@ describe('Generic Lookup Handler', function () {
                 return server.injectThen('/users/hank')
                     .then(function (res) {
                         res.should.have.property('statusCode', 200);
-                        finder.should.have.been.calledWith({ where: { username: 'hank' }, include: [sequelize.models.User.associations.settings] });
+                        finder.should.have.been.calledWith({
+                            where: { username: 'hank' },
+                            include: [sequelize.models.User.associations.settings]
+                        });
                     });
             });
 
@@ -414,12 +428,15 @@ describe('Generic Lookup Handler', function () {
                 return server.injectThen('/users/hank')
                     .then(function (res) {
                         res.should.have.property('statusCode', 200);
-                        finder.should.have.been.calledWith({ where: { username: 'hank' }, include: [sequelize.models.User.associations.settings] });
+                        finder.should.have.been.calledWith({
+                            where: { username: 'hank' },
+                            include: [sequelize.models.User.associations.settings]
+                        });
                     });
             });
 
             it('should not call postLookup method if not found', function () {
-                const postLookup = sinon.spy(function() {
+                const postLookup = sinon.spy(function () {
                     return null;
                 });
 
@@ -459,7 +476,7 @@ describe('Generic Lookup Handler', function () {
                 })
                     .then(res => {
                         res.statusCode.should.equal(200);
-                        scope.should.have.been.calledWith('customScope');
+                        scope.should.have.been.calledWith(['customScope']);
                     });
             });
 
@@ -506,6 +523,28 @@ describe('Generic Lookup Handler', function () {
                         res.statusCode.should.equal(200);
                         handlerScopeSpy.should.have.been.calledOnce;
                         handlerScopeSpy.firstCall.args.should.have.length(1);
+                    });
+            });
+
+            it(`should use a configured scope array of scope names`, () => {
+                server.route({
+                    method: 'get',
+                    path: '/users/me',
+                    handler: {
+                        'db.lookup': {
+                            model: 'User',
+                            scope: ['scope_one', 'scope_two']
+                        }
+                    }
+                });
+
+                return server.injectThen({
+                    method: 'GET',
+                    url: '/users/me'
+                })
+                    .then(res => {
+                        res.statusCode.should.equal(200);
+                        scope.should.have.been.calledWith(['scope_one', 'scope_two']);
                     });
             });
 
